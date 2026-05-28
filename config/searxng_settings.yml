@@ -1,0 +1,50 @@
+# SearXNG configuration for agentic orchestrator
+# Enable JSON API for programmatic access
+
+use_default_settings: true
+
+search:
+  # Enable JSON format for API access
+  formats:
+    - html
+    - json
+    - csv
+    - rss
+
+server:
+  limiter: false  # Disable rate limiting for local use
+  secret_key: "agentic-orchestrator-local-key"  # Required for limiter
+
+ui:
+  static_use_hash: true
+
+# Enable multiple engines for resilience against rate limits / CAPTCHAs
+engines:
+  - name: google
+    engine: google
+    shortcut: go
+    disabled: false
+  - name: bing
+    engine: bing
+    shortcut: bi
+    disabled: false
+  - name: brave
+    engine: brave
+    shortcut: br
+    disabled: false
+  - name: duckduckgo
+    engine: duckduckgo
+    shortcut: ddg
+    disabled: false
+  - name: startpage
+    engine: startpage
+    shortcut: sp
+    disabled: false
+  - name: qwant
+    engine: qwant
+    shortcut: qw
+    disabled: false
+  - name: mojeek
+    engine: mojeek
+    shortcut: mj
+    disabled: false

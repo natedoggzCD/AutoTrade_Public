@@ -1,0 +1,1541 @@
+backtest:
+  bar_size: 1h
+  benchmark_symbol: SPY
+  commission_pct: 0.0
+  enable_weekly_signal_audit: true
+  initial_cash: 100000
+  max_hold_days: 7
+  max_position_value: 10000
+  max_positions: 50
+  min_bullish: 4
+  min_lesson_score: 20
+  partial_fill_max: 1.0
+  partial_fill_min: 0.85
+  seed: 42
+  signals_per_day: 100
+  slippage_pct: 0.0002
+  spread_pct: 0.00035
+  stop_atr: 2.0
+  target_atr: 3.0
+  use_news: true
+  strategy_backtester:
+    cache_staleness_hours: 24
+    min_trades_for_validity: 12
+    gate_win_rate: 40
+    gate_min_trades: 12
+    boost_win_rate: 55
+    boost_min_trades: 20
+    batch_prefetch_size: 200
+    yfinance_rate_limit: 5
+    score_win_rate_high: 60
+    score_win_rate_mid: 50
+    score_win_rate_low: 40
+    score_win_rate_weak: 30
+    score_avg_gain_high: 2.0
+    score_avg_gain_mid: 1.0
+    score_avg_gain_low: 0.0
+    score_avg_gain_penalty: -1.0
+    score_backtest_weight_no_vl: 0.05
+    score_backtest_weight_with_vl: 0.05
+backtest_protocol:
+  enabled: true
+  walk_forward:
+    mode: rolling
+    train_days: 90
+    test_days: 30
+  nested_validation:
+    enabled: true
+    inner_folds: 3
+  transaction_cost_sensitivity:
+    commission_pct:
+    - 0.0005
+    - 0.001
+    - 0.002
+    slippage_pct:
+    - 0.0002
+    - 0.0005
+    - 0.001
+    spread_pct:
+    - 0.0005
+    - 0.001
+    - 0.002
+  leakage_guard:
+    fail_on_detected_leakage: true
+  paper_gate:
+    min_out_of_sample_trades: 30
+  multiple_testing_control:
+    method: dsr+spa
+    min_candidate_count: 20
+    bootstrap_samples: 1000
+    alpha: 0.05
+  selection_bias_control:
+    enable_pbo: true
+    pbo_min_folds: 8
+  inference:
+    robust_sharpe_test: bootstrap
+    robust_sharpe_min_pvalue: 0.05
+execution:
+  mode: paper
+  default_order_type: market
+  sim:
+    seed: 42
+    latency_ms_min: 50
+    latency_ms_max: 500
+    partial_fill_enabled: true
+    cannot_fill_probability: 0.02
+  cost:
+    commission_pct: 0.0
+    slippage_pct: 0.0002
+    spread_pct: 0.00035
+  entry:
+    enabled: true
+    high_urgency_min_score: 72.0
+    critical_urgency_min_score: 84.0
+    replace_schedule_seconds: [20, 45, 90]
+    max_replacements: 3
+    min_reprice_gap_pct: 0.2
+    stale_after_seconds: 300
+    escalate_to_marketable_min_score: 85.0
+    escalate_to_marketable_min_dollar_vol: 2500000.0
+    normal:
+      max_chase_bps: 8
+      max_slippage_bps: 12
+    high:
+      max_chase_bps: 18
+      max_slippage_bps: 20
+    critical:
+      max_chase_bps: 30
+      max_slippage_bps: 30
+  fail_fast_on_unhandled_order_state: true
+plan_caps:
+  pm_bridge_limit: 0
+  pm_plan_signals_cap: 0
+  premarket_exec_cap: 0
+  premarket_input_cap: 0
+trim_governance:
+  cooldown_minutes: 60
+  max_per_symbol_per_day: 2
+  aggregate_cap_pct: 0.50
+  aggregate_cap_red_day_max_pct: 0.80
+  aggregate_cap_red_day_loss_scale_pct: 5.0
+  disable_auto_trim_paths: true
+llm_advisory_escalation:
+  enabled: true
+  min_gap_minutes: 30
+  advisor_cooldown_minutes: 30
+  ladder_pct: [25, 50, 100]
+  confidence_floor: 0.70
+  full_exit_reentry_cooldown_minutes: 120
+  max_steps_per_symbol_per_day: 3
+  allow_risk_gate_profit_take_full_exit: false
+advisor_control:
+  enabled: true
+  min_recheck_seconds: 300
+  force_recheck_seconds: 900
+  price_move_bps_trigger: 35
+  pnl_change_pct_trigger: 0.5
+  hold_minutes_trigger: 30
+
+posture:
+  stress_window_minutes: 90
+  hard_stop_lockout_minutes: 90
+
+# Multi-cycle memory: thesis cache persists advisor reasoning across cycles
+thesis_cache:
+  enabled: true
+  persist_to_disk: true
+  persist_path: "data/position_theses.json"
+  max_history_entries: 10
+  archive_path: "data/thesis_archive.jsonl"
+
+# Tier-based position scheduling: adaptive monitoring cadence per position
+position_scheduler:
+  enabled: true
+  tiers:
+    critical:
+      interval_seconds: 30    # Near stop, first 15 min, earnings day
+    active:
+      interval_seconds: 60    # New entry < 1 hour, significant move
+    stable:
+      interval_seconds: 180   # Thesis intact, low volatility
+    dormant:
+      interval_seconds: 300   # Well in profit, far from key levels
+  force_eval_price_move_bps: 50    # Override: force eval on 50 bps move
+  force_eval_pnl_change_pct: 1.0   # Override: force eval on 1% P&L shift
+
+risk_management:
+  enabled: true
+  fail_fast_on_limit_breach: true
+  max_portfolio_exposure_pct: 100.0
+  max_symbol_exposure_pct: 15.0
+  max_sector_exposure_pct: 40.0
+  max_correlation_cluster_exposure_pct: 35.0
+  max_gross_exposure_pct: 150.0
+  max_net_exposure_pct: 100.0
+  entry_halt_drawdown_pct: 10.0
+  rotation_cooldown_minutes: 30
+  cross_sectional_rebalance_frequency: "weekly"
+  signal_family_risk_budgets:
+    ts_momentum: 0.25
+    xs_momentum: 0.20
+    mean_reversion: 0.15
+    breakout: 0.15
+    pullback: 0.10
+    pairs: 0.15
+  kill_switch:
+    max_consecutive_failures: 3
+    max_realized_daily_loss_pct: 3.0
+strategy_lab:
+  enabled: true
+  quick_scan_days: 90
+  default_lookback_days: 180
+  default_universe_size: 0
+  default_model: phi4:14b-q4_K_M
+  min_profit_factor_export: 1.0
+  min_trades_export: 50
+  walk_forward_min_test_pf: 1.0
+  walk_forward_max_degradation_pct: 40.0
+  default_train_pct: 0.7
+  default_folds: 3
+  auto_max_full_wf_candidates: 30
+  auto_strict_validation_enabled: true
+  auto_strict_top_n: 5
+  auto_walkforward_pf_floor: 0.85
+  auto_early_reject_pf: 0.70
+  auto_rich_search_enabled: true
+  auto_entry_combo_cap: 4
+  auto_exit_combo_cap: 3
+  validated_strategy_pool_top_n: 5
+  validated_strategy_min_profit_factor: 1.05
+  per_symbol_strategy_enabled: true
+  per_symbol_top_k: 5
+  per_symbol_min_trades: 8
+  per_symbol_shrinkage_weight: 0.35
+  per_symbol_fallback_to_global: true
+  strict_require_walkforward_pass: false
+  strict_min_profit_factor: 1.00
+  strict_min_win_rate: 0.40
+  strict_min_sharpe: 0.0
+  strict_max_drawdown_pct: 40.0
+  strict_min_trades: 50
+  strict_min_total_pnl: 0.0
+  monte_carlo:
+    n_simulations: 1000
+    confidence_level: 0.80
+    min_ci_profit_factor: 0.80
+    enabled: true
+conviction_engine:
+  add_conviction_min: 65.0
+  flat_threshold_pct: 0.5
+  flat_decay_rate: 2.5
+  flat_decay_max: 40.0
+  flat_decay_aggressive_hours: 24.0
+  winner_decay_rate: 0.0
+  winner_decay_start_hours: 8.0
+  loser_decay_rate: 3.0
+  loser_decay_max: 45.0
+  stagnation_penalty: 10.0
+  stagnation_hours_threshold: 6.0
+  fundamental_weight: 0.15
+  hold_conviction_min: 40.0
+  position_weight: 0.4
+  relative_weight: 0.15
+  technical_weight: 0.3
+  time_decay_rate_per_hour: 1.5
+  time_decay_start_hours: 8.0
+mcp:
+  enabled: false
+  timeout: 30
+  retry_attempts: 3
+  fallback_to_direct: true
+  log_calls: true
+  servers:
+    alpaca:
+      enabled: true
+      paper_mode: true
+    sqlite:
+      enabled: true
+      db_path: "data/downday/predictions_db.sqlite"
+    fetch:
+      enabled: true
+      max_length_default: 5000
+      ignore_robots_txt: false
+    time:
+      enabled: true
+      local_timezone: "America/New_York"
+sequential_shadow_eval:
+  enabled: false
+  mode: "executed_trade_shadow"
+  schedule: "pm_daily"
+  model: ""
+  timeout_seconds_per_event: 10
+  max_workers: 2
+  batch_size: 50
+  max_events_per_run: 0
+  horizon_minutes: 120
+  runner_timeout_seconds: 900
+  persist_summary_only: true
+  materialize_ttl_cycles: 20
+inverse_etf:
+  enabled: true
+  max_allocation_pct: 20
+  max_positions: 3
+  position_size: 3000
+  leveraged_max_hold_days: 3
+  entry_triggers:
+    vix_above: 25
+    spy_below_sma20: true
+    market_regime: "BEARISH"
+    consecutive_red_days: 3
+  exit_triggers:
+    vix_below: 18
+    spy_above_sma20: true
+    market_regime: "BULLISH"
+    profit_target_pct: 10
+opportunity_cost:
+  min_improvement: 1.5
+  transaction_cost_bps: 25.0
+data:
+  asset_class: equities_us
+  primary_timeframe: 1d
+  intraday_timeframe: 1m
+  max_staleness_days: 1
+  bootstrap_from_h5_enabled: true
+  fail_fast_on_missing_core_data: true
+  use_ingestion_gateway: true
+  live_price_provider_priority:
+  - alpaca
+  - yfinance
+  - local
+  nasdaq_screener_csv: nasdaq_screener.csv
+  daily_features_parquet: daily_features.parquet
+  downday_root: data/downday
+  hourly_prices_parquet: prices_hourly.parquet
+  market_data_duckdb: market_data.duckdb
+  replay_minute_archive:
+    enabled: true
+    duckdb_path: data/replay_minute_bars.duckdb
+    preferred_start_et: "04:00"
+    preferred_end_et: "16:00"
+    fallback_regular_session_only: true
+    max_batch_symbols: 100
+    prefer_local_archive: true
+    allow_live_fallback_if_incomplete: true
+decision_policy:
+  add_score_threshold: 65
+  exit_score_threshold: 70
+  max_add_pct: 0.5
+  min_candidates: 3
+  min_trim_pct: 0.2
+  trim_score_threshold: 50
+  weights:
+    momentum_score: 0.15
+    risk_score: 0.35
+    sentiment_score: 0.15
+    technical_score: 0.25
+    time_score: 0.1
+llm:
+  cache_ttl_seconds: 1800
+  chat_provider: local
+  codex_command: codex
+  codex_extra_args: []
+  codex_json: true
+  codex_timeout: 120
+  codex_use_stdin: true
+  enable_cache: true
+  max_concurrent_calls: 2
+  model_decision: qwen2.5-coder:14b
+  model_large: qwen2.5-coder:14b
+  model_medium: gemma4:e4b
+  model_news: gemma4:e4b
+  model_risk: phi4:14b-q4_K_M
+  model_small: qwen2.5-coder:7b
+  model_technical: qwen2.5-coder:7b
+  num_ctx: 2048
+  ollama_timeout: 60
+  ollama_url: http://localhost:11434/api/chat
+  use_opencode_for_fixes: true
+  openai_code_model: gpt-4.1
+  openai_fast_model: gpt-4.1-mini
+  openai_merge_model: gpt-4.1
+  openai_reasoning_model: o4-mini
+  provider: local
+  repair_openai_enabled: false
+  repair_codex_enabled: false
+  repair_qwen3_enabled: false
+  temperature: 0.1
+runtime_recovery:
+  enabled: true
+  use_supervisor_wrapper: true
+  preflight_enabled: false
+  post_restart_smoke_enabled: false
+  allow_live_local_repair: false
+  allow_live_openai_repair: true
+  allow_live_codex_repair: false
+  restart_backoff_seconds: 20
+  max_restarts_per_hour: 3
+  max_restarts_per_session: 6
+  fatal_signature_threshold: 3
+  smoke_py_compile_changed_files: true
+  smoke_pytest_blocking: false
+  smoke_pytest_recent_commit_window: 12
+  smoke_pytest_timeout_seconds: 600
+  smoke_pytest_modules: []
+  status_json_path: logs/runtime_recovery_latest.json
+  status_jsonl_path: logs/runtime_recovery.jsonl
+vl_overnight:
+  enabled_models: []
+  include_all_installed_vision_models: false
+  fallback_enabled: false
+  preprocess_mode: none
+  max_stage_runtime_seconds: 180
+  quarantine_thresholds:
+    min_schema_pass_rate: 0.85
+    min_unique_combos: 6
+    max_dominant_combo_ratio: 0.70
+    max_duplicate_reasoning_ratio: 0.75
+overnight_secondary:
+  enabled: true
+  run_when_research_complete: true
+  vl_benchmark_enabled: false
+  vl_benchmark_cycle_interval: 45
+  vl_benchmark_symbols: 8
+  vl_benchmark_max_runtime_seconds: 420
+  top_pick_research_enabled: true
+  top_pick_research_cycle_interval: 5
+  top_pick_research_symbols: 4
+  top_pick_research_max_runtime_seconds: 900
+  top_pick_research_universe_symbols: 200
+  top_pick_research_rotation_enabled: true
+  top_pick_research_actionable_only: true
+  top_pick_research_include_deep_dive: true
+  top_pick_research_include_web_research: true
+  top_pick_research_update_researched_state: true
+  historical_revisit_enabled: true
+  historical_revisit_cycle_interval: 60
+  historical_revisit_days: 5
+  historical_revisit_symbols: 20
+  historical_revisit_max_runtime_seconds: 360
+  signal_mining_enabled: true
+  signal_mining_cycle_interval: 30
+  signal_mining_universe_symbols: 1600
+  signal_mining_max_new_registry_entries: 25
+  signal_mining_gap_threshold_pct: 5.0
+  signal_mining_breadth_threshold_pct: 65.0
+  signal_mining_volatility_atr_threshold: 6.0
+  signal_mining_volatility_range_threshold: 8.0
+  strategy_discovery_enabled: true
+  strategy_discovery_cycle_interval: 15
+  strategy_discovery_lookback_days: 90
+  strategy_discovery_universe_size: 50
+  strategy_discovery_top_candidates: 3
+  strategy_discovery_max_runtime_seconds: 600
+  strategy_discovery_max_additions: 20
+  strategy_discovery_min_profit_factor: 1.2
+  strategy_discovery_min_win_rate: 0.45
+overnight_workflow:
+  target_watchlist_size: 400
+  completion_min_watchlist_size: 400
+  breadth_min_symbols: 2000
+  enforce_top_news_count: 200
+  news_stage_required: true
+  news_stage_max_workers: 8
+  news_stage_timeout_seconds: 300
+logging:
+  backup_count: 5
+  console: true
+  json_filename: app.jsonl
+  level: INFO
+  max_bytes: 5000000
+  show_pdt_status: true
+  show_rule_triggers: true
+  show_score_breakdown: true
+monitoring:
+  enabled: true
+  metrics_emit_interval_sec: 60
+  alerts:
+    drawdown_alarm_pct: 5.0
+    data_staleness_hours: 24
+    realized_vs_expected_slippage_bps: 20
+    trade_conversion_rate_floor: 0.05
+    alpha_family_degradation_pct: 30.0
+    regime_drift_psi_threshold: 0.2
+  reporting:
+    daily_report_enabled: true
+    weekly_rollup_enabled: true
+  release_gates:
+    paper_trading_min_days: 10
+    canary_max_risk_pct: 10.0
+portfolio:
+  max_positions: 50
+  core_max_positions: 40
+  late_scan_reserved_positions: 10
+  min_hold_minutes: 30
+  strength_lock_enabled: true
+  strength_lock_min_entry_rsi_14: 70.0
+  strength_lock_trigger_atr_fraction: 0.5
+  strength_lock_trim_fraction: 0.33
+  strength_lock_lower_high_retrace_pct: 0.25
+  strength_lock_min_minutes_after_open: 15
+  strength_lock_min_hold_minutes: 360
+  position_size_max: 4500
+  position_size_target: 2000
+  max_position_pct_of_equity: 10.0
+strategy_failsafe:
+  normal:
+    max_positions: 40
+    min_conviction_hold: 50
+    min_conviction_exit: 55
+    position_size_pct: 3.0
+    position_size_multiplier: 1.0
+    stop_multiplier: 2.0
+    halt_new_entries: false
+  degraded:
+    max_positions: 12
+    min_conviction_hold: 55
+    min_conviction_exit: 55
+    position_size_pct: 2.0
+    position_size_multiplier: 0.67
+    stop_multiplier: 1.5
+    halt_new_entries: false
+  failing:
+    max_positions: 8
+    min_conviction_hold: 60
+    min_conviction_exit: 55
+    position_size_pct: 1.5
+    position_size_multiplier: 0.5
+    stop_multiplier: 1.0
+    halt_new_entries: false
+  critical:
+    max_positions: 0
+    min_conviction_hold: 70
+    min_conviction_exit: 65
+    position_size_pct: 0.0
+    position_size_multiplier: 0.0
+    stop_multiplier: 1.0
+    halt_new_entries: true
+    message: Strategy critically failing. All positions liquidated.
+  degraded_win_rate: 0.30
+  degraded_profit_factor: 0.7
+  failing_win_rate: 0.25
+  failing_profit_factor: 0.5
+  critical_win_rate: 0.2
+  degraded_drawdown_pct: 5.0
+  failing_drawdown_pct: 7.0
+  critical_drawdown_pct: 10.0
+  recovery_win_rate: 0.35
+  recovery_profit_factor: 1.0
+  recovery_days: 3
+  loser_exit_pnl_pct: -5.0
+  profit_take_pnl_pct: 10.0
+# day-manager 2026-05-19 (H8), wired live 2026-05-26: loss-floor exit policy.
+# Tiers fire when pnl_pct <= max_pnl_pct AND held_minutes >= min_held_minutes.
+# Hardest tier fires first; pnl_pct alone decides (no score check, per D3).
+loss_floor:
+  enabled: true
+  ladder:
+    - max_pnl_pct: -2.0
+      min_held_minutes: 60
+    - max_pnl_pct: -3.5
+      min_held_minutes: 30
+    - max_pnl_pct: -5.0
+      min_held_minutes: 0
+  telemetry_path: logs/loss_floor_telemetry.jsonl
+  state_file: plans/strategy_failsafe_state.json
+  error_cascade_cooldown_minutes: 15
+  error_cascade_stepdown_minutes: 15
+  error_cascade_min_quiet_cycles: 2
+short_engine:
+  # day-manager 2026-05-20: user enabled shorts for live broker trading.
+  enabled: true
+  dry_run: false
+  paper_trading: false
+  paper_size_multiplier: 0.5
+  gross_cap_pct: 0.15
+  hard_to_borrow_allowed: false
+  min_promotion_sessions: 0
+  paper_sanity_sessions: 1
+  min_promotion_profit_factor: 1.2
+  min_promotion_win_rate: 0.60
+  historical_min_trades: 30
+  historical_min_profit_factor: 1.2
+  historical_min_win_rate: 0.52
+  historical_max_breadth_pct: 45.0
+  historical_max_up_probability: 0.65
+  historical_hold_days: 3
+risk_gate:
+  add_conviction_min: 65.0
+  add_max_position_pct: 0.5
+  add_profit_threshold_pct: 4.0
+  add_on_red_block_pct: -5.0
+  add_block_after_trim: true
+  atr_k: 2.0
+  atr_trail_k: 1.5
+  drawdown_trail_atr_k: 0.5
+  gap_hard_cap_by_regime:
+    LEAN_BULLISH: 15.0
+    NEUTRAL: 10.0
+    RISK_OFF: 5.0
+  drawdown_trim_levels:
+  - drawdown_pct: 3.0
+    trim: 0.33
+  - drawdown_pct: 6.0
+    trim: 0.45
+  - drawdown_pct: 10.0
+    trim: 1.0
+  hard_stop_pct: -15.0
+  early_fade_pnl_pct: -2.0
+  early_fade_max_hold_minutes: 60
+  midday_revalidation_trim_fraction: 0.33
+  min_hold_minutes_for_trim: 180
+  pdt_buffer_trades: 0
+  pdt_unlock_hours: 0.0  # PDT disabled for testing phase (was 24.0)
+  profit_take_levels:
+  - pct: 5.0
+    trim: 0.10
+  - pct: 8.0
+    trim: 0.10
+  - pct: 12.0
+    trim: 0.15
+  - pct: 15.0
+    trim: 0.20
+  - pct: 20.0
+    trim: 0.25
+  target_atr: 3.0
+  time_stop_flat_threshold_pct: 1.0
+  time_stop_minutes: 240
+  multi_day_time_stop_days: 3.0
+  multi_day_time_stop_min_gain_pct: 0.5
+  trim_fraction: 0.5
+  trim_threshold_pct: -5.0
+regime_strategies:
+  strong_rally:
+    action: null
+    cash_reserve_pct: 10
+    entry_preference: buy_breakout
+    hold_period_target: 3-5 days
+    max_positions: 30
+    min_atr_percent: 2.0
+    position_size_multiplier: 1.2
+    profit_target_multiplier: 3.0
+    scan_types:
+    - momentum_breakout
+    - earnings_momentum
+    stop_multiplier: 2.0
+  recovery:
+    action: null
+    cash_reserve_pct: 20
+    entry_preference: buy_dip
+    hold_period_target: 1-2 days
+    max_positions: 25
+    min_atr_percent: 2.5
+    position_size_multiplier: 1.0
+    profit_target_multiplier: 2.0
+    scan_types:
+    - mean_reversion
+    - momentum_breakout
+    stop_multiplier: 2.5
+  short_squeeze:
+    action: null
+    cash_reserve_pct: 30
+    entry_preference: buy_dip
+    hold_period_target: 1 day
+    max_positions: 15
+    min_atr_percent: 3.0
+    position_size_multiplier: 0.8
+    prefer_beaten_down: true
+    profit_target_multiplier: 1.5
+    scan_types:
+    - mean_reversion
+    stop_multiplier: 1.5
+  grinding_up:
+    action: null
+    cash_reserve_pct: 15
+    entry_preference: buy_breakout
+    hold_period_target: 3-5 days
+    max_positions: 25
+    min_atr_percent: 2.0
+    position_size_multiplier: 1.1
+    profit_target_multiplier: 2.5
+    scan_types:
+    - momentum_breakout
+    stop_multiplier: 2.0
+  neutral:
+    action: null
+    cash_reserve_pct: 20
+    entry_preference: standard
+    hold_period_target: 3 days
+    max_positions: 25
+    min_atr_percent: 3.0
+    position_size_multiplier: 1.0
+    profit_target_multiplier: 2.5
+    scan_types:
+    - momentum_breakout
+    - mean_reversion
+    stop_multiplier: 2.0
+  rotation:
+    action: null
+    cash_reserve_pct: 25
+    entry_preference: follow_sectors
+    hold_period_target: 3-5 days
+    max_positions: 20
+    min_atr_percent: 2.5
+    position_size_multiplier: 0.9
+    profit_target_multiplier: 2.0
+    scan_types:
+    - momentum_breakout
+    stop_multiplier: 2.0
+  distribution:
+    action: tighten_stops
+    cash_reserve_pct: 40
+    entry_preference: tight_stops
+    hold_period_target: 1-2 days
+    max_positions: 15
+    min_atr_percent: 2.0
+    position_size_multiplier: 0.6
+    profit_target_multiplier: 1.5
+    scan_types:
+    - mean_reversion
+    stop_multiplier: 1.5
+  selloff:
+    action: null
+    cash_reserve_pct: 50
+    entry_preference: defensive
+    hold_period_target: 1 day
+    max_positions: 10
+    min_atr_percent: 2.0
+    position_size_multiplier: 0.5
+    profit_target_multiplier: 1.5
+    scan_types:
+    - mean_reversion
+    stop_multiplier: 1.5
+  capitulation:
+    action: exit_all_losers
+    cash_reserve_pct: 80
+    max_positions: 0
+    position_size_multiplier: 0.0
+    scan_types: []
+  crash:
+    action: exit_all_positions
+    cash_reserve_pct: 90
+    max_positions: 0
+    position_size_multiplier: 0.0
+    scan_types: []
+risk_limits:
+  dilution_triggers_exit: true
+  max_daily_loss_pct: 3.0
+  max_loss_to_atr: 2.0
+  max_position_pct: 15.0
+  min_hold_minutes: 30
+  offering_triggers_exit: true
+rotation:
+  max_rotations_per_day: 10
+  min_improvement_score: 15.0
+  min_signal_score: 70
+  scan_top_candidates: 50
+screener_v2:
+  enabled: true
+  default_scoring_mode: momentum_pullback
+  enforce_min_candidates: true
+  five_day_range_min_pct: 3.0
+  gap_negative_penalty: 5.0
+  gap_penalty_per_pct: 5.0
+  history_days: 260
+  macd_hist_scale: 1000.0
+  max_atr_pct: 8.0
+  max_candidates: 50
+  max_composite_score: 85
+  max_composite_score_exempt_regimes: ["STRONG_RALLY"]
+  max_market_cap: 10000000000.0
+  max_price: 400
+  min_avg_dollar_volume: 500000
+  min_avg_volume: 100000
+  min_atr_pct: 3.0
+  min_composite_score: 75
+  min_history_days: 80
+  min_market_cap: 2000000000.0
+  post_spike_volume_threshold: 5.0
+  post_spike_range_atr_threshold: 1.5
+  min_price: 5
+  momentum_scale: 5.0
+  prefer_bullish_regime: true
+  rsi_max: 70
+  rsi_min: 30
+  min_adx_for_trend_bonus: 20
+  sr_data_max_age_days: 5
+  sr_round_number_tolerance: 0.01
+  sma20_trend_scale: 8.0
+  sma5_curl_scale: 1.5
+  sma5_min_accel: 0.15
+  sma5_min_slope: 0.05
+  sr_action_plan_keywords:
+  - bullish
+  - buy
+  - accumulate
+  - trend
+  - breakout
+  sr_bonus_cap: 10
+  sr_distance_to_resistance_min_pct: 4.0
+  sr_rr_ratio_min: 2.0
+  sr_rr_discount_factor: 0.6
+  sr_rr_effective_min: 1.2
+  sr_support_distance_atr_max: 1.5
+  sr_support_strength_min: 50
+  sr_max_weight: 0.10
+  sr_bonus_cap: 18
+  min_atr_risk_reward: 2.0
+  weights:
+    sma5_curl: 0.15
+    momentum_roc: 0.15
+    relative_strength: 0.05
+    rs_vs_sector: 0.05
+    volume_surge: 0.10
+    ema_alignment: 0.10
+    rsi_pullback: 0.05
+    regime: 0.05
+    sr_alignment: 0.05
+    adx_trend_quality: 0.15
+    volume_divergence: 0.05
+    mean_reversion: 0.05
+  sector_relative_strength_lookbacks:
+  - 5
+  - 20
+  sector_etf_map:
+    basic_materials: XLB
+    communication_services: XLC
+    communications: XLC
+    consumer_cyclical: XLY
+    consumer_discretionary: XLY
+    consumer_staples: XLP
+    energy: XLE
+    financial: XLF
+    financials: XLF
+    health_care: XLV
+    healthcare: XLV
+    industrials: XLI
+    real_estate: XLRE
+    technology: XLK
+    utilities: XLU
+signal_validation:
+  adaptive_tolerance_enabled: true
+  adaptive_tolerance_min: 0.05
+  adaptive_tolerance_shrink_factor: 0.5
+  adaptive_tolerance_trigger_matches: 4000
+  atr_filter_enabled: true
+  avg_return_full_credit: 1.45
+  confidence_full_credit: 3876
+  enabled: true
+  gl_ratio_filter_enabled: true
+  gl_ratio_filter_min: 1.2
+  gl_ratio_full_credit: 2.83
+  liquidity_filter_enabled: true
+  lookback_days: 60
+  max_atr_pct: 8.0
+  min_atr_pct: 1.0
+  min_backtest_score: 35  # Lowered from 45 to improve pass rate
+  min_dollar_volume: 2000000.0
+  min_price: 2.0
+  min_similar_signals: 10
+  penalty_avg_return_points: 10.0
+  penalty_avg_return_threshold: -1.0
+  penalty_gl_ratio_points: 5.0
+  penalty_gl_ratio_threshold: 0.5
+  penalty_win_rate_points: 10.0
+  penalty_win_rate_threshold: 0.25
+  recency_filter_enabled: true
+  recency_max_days: 365
+  regime_filter_enabled: false
+  regime_lookback_days: 20
+  regime_min_trend: 0.0
+  score_weight_backtest: 0.3
+  score_weight_signal: 0.7
+  tolerance: 0.15
+  win_rate_full_credit: 0.45
+  win_threshold_atr_multiple: 1.0
+  win_threshold_atr_relative: true
+  win_threshold_pct: 2.0
+feature_engineering:
+  enabled: true
+  cache_enabled: true
+  cache_ttl_minutes: 60
+  primary_timeframe: "1d"
+  secondary_timeframes:
+  - "1h"
+  lookback_bars: 252
+  min_history_bars: 80
+  alpha_families_enabled:
+  - ts_momentum
+  - xs_momentum
+  - mean_reversion
+  - breakout
+  - pullback
+  - pairs
+  trend:
+    ma_slope_window: 20
+    dmi_window: 14
+    efficiency_window: 20
+  momentum:
+    exclude_recent_bars: 21
+  reversal:
+    rsi_short_window: 2
+  breakout:
+    donchian_window: 20
+    squeeze_percentile_window: 120
+  pairs:
+    zscore_window: 60
+    min_correlation: 0.7
+  breadth_symbols:
+  - SPY
+  - QQQ
+  fail_fast_on_missing_columns: true
+strategy:
+  fallback_stop_atr: 2.0
+  fallback_target_atr: 3.5
+  min_bullish: 4
+  min_lesson_score: 10
+  partial_at_r1: 0.5
+  r2_max_atr: 3.0
+  s1_stop_buffer_pct: 0.2
+entry_quality:
+  enabled: true
+  min_entry_score: 25.0
+  min_risk_reward: 1.4
+  off_watchlist_validation_enabled: true
+  off_watchlist_min_score: 60.0
+  off_watchlist_min_risk_reward: 1.6
+  off_watchlist_min_volume_ratio: 1.15
+  off_watchlist_require_backtest_validation: true
+  watchlist_source_score_bonus: 4.0
+  overnight_full_watchlist_edge_enabled: true
+  overnight_full_watchlist_edge_min_score: 60.0
+  overnight_full_watchlist_edge_max_score: 75.0
+  overnight_full_watchlist_edge_bonus: 6.0
+  unknown_source_score_band_block_enabled: true
+  unknown_source_block_min_score: 75.0
+  unknown_source_block_max_score: 85.0
+  high_score_no_catalyst_confirmation_enabled: true
+  high_score_no_catalyst_min_score: 75.0
+  overnight_watchlist_validation_carry_min_plan_score: 70.0
+  overnight_watchlist_validation_carry_fraction: 0.25
+  overnight_watchlist_validation_carry_cap: 12.0
+  off_watchlist_score_penalty: 8.0
+  momentum_gate_enabled: true
+  momentum_penalty_points: 15.0
+  momentum_insufficient_data_penalty_points: 5.0
+  momentum_min_bars: 3
+  momentum_min_volume_ratio: 0.8
+  momentum_require_above_vwap: true
+  momentum_require_trend_up: true
+  momentum_hard_block: false
+  momentum_scanner_min_score: 75.0
+  momentum_scanner_min_volume_ratio: 1.75
+  momentum_scanner_min_trend_strength: 0.6
+  momentum_scanner_min_short_momentum_pct: 0.5
+  momentum_scanner_max_pullback_pct: 2.5
+  discovery_rank_limit: 2
+  block_duplicate_open_orders: true
+  watch_breakout_override_enabled: true
+  watch_breakout_min_score: 65.0
+  watch_breakout_min_volume_ratio: 2.0
+  breakout_tight_stop_atr: 1.35
+  candidate_backtest_validation_enabled: true
+  candidate_backtest_top_n: 12
+  candidate_backtest_refresh_minutes: 30
+  candidate_backtest_boost_cap: 10.0
+  overnight_watchlist_backtest_reject_enabled: false
+  overnight_watchlist_backtest_penalty_cap: 8.0
+  sma200_relax_if_zero_pass: true
+  sma200_relax_max_below_pct: 3.0
+  stale_signal_max_age_days: 1
+  stale_signal_penalty_points: 10.0
+  wave_entry_enabled: true
+  wave1_allow_observation_entries: true
+  early_runner_enabled: true
+  early_runner_max_positions: 10
+  early_runner_post_open_rescan_enabled: true
+  intraday_momentum_enabled: true
+  intraday_momentum_max_positions: 8
+  overnight_recheck_after_first_hour_enabled: true
+  observation_period_minutes: 5  # Minutes after 9:30 ET when observation ends (9:35 ET). Compressed from 15 to surface entries earlier — strong-candidate fast lane bypasses this entirely; the 5-min window is the minimum watch period.
+  # Strong-candidate fast lane: high-conviction names bypass the observation
+  # gate after the minimum watch period, so they can enter at 9:35 ET instead
+  # of waiting until CORE_TRADING (10:30 ET).
+  strong_candidate_fast_lane_enabled: true
+  strong_candidate_fast_lane_min_score: 80.0
+  strong_candidate_fast_lane_min_minutes_after_open: 5
+  wave_breakout_rescue_enabled: true
+  wave_breakout_rescue_min_score: 75.0
+  wave_breakout_rescue_max_gap_pct: 9.0
+  wave_breakout_rescue_size_multiplier: 0.4
+  wave_breakout_rescue_limit_offset_bps: 15.0
+  pm_wave_gap_rescue_enabled: true
+  pm_wave_gap_rescue_min_score: 80.0
+  pm_wave_gap_rescue_max_gap_pct: 18.0
+  wave_hard_reject_gap_pct: 12.0
+  quick_turnover_continuation_enabled: true
+  quick_turnover_continuation_min_score: 66.0
+  quick_turnover_continuation_max_gap_pct: 18.0
+  quick_turnover_continuation_min_volume_ratio: 1.0
+  wave_max_entries: 30
+  wave3_auto_advance: true
+  wave_capacity_slots_multiplier: 0.75
+  wave_capacity_bypass_min_score: 75.0
+  fresh_entry_exit_cooldown_minutes: 120
+  stale_entry_reprice_streak: 2
+  stale_entry_gap_reject_streak: 2
+  stale_entry_temp_evict_sessions: 1
+  early_runner_empty_streak_observe_only: true
+  early_runner_observe_only_streak: 3
+  # Power Hour (3:00-4:00 PM ET) institutional volume spike detection
+  power_hour_volume_enabled: true
+  power_hour_volume_threshold: 2.5  # Volume surge ratio to trigger (2.5x = institutional level)
+  power_hour_min_position_pct: 0.5  # Only trigger if below 50% of max positions (room to add)
+  power_hour_max_entries_per_day: 3  # Max power hour entries per day
+  strategy_profiles_enabled: true
+  opening_range_window_minutes: 30  # 9:30-10:00 ET opening range window
+  opening_range_breakout_score_bonus: 12.0
+  opening_range_breakout_size_multiplier: 1.15
+  vwap_mean_reversion_window_start_ct: 630  # 11:30 ET
+  vwap_mean_reversion_window_end_ct: 750  # 1:30 ET
+  vwap_mean_reversion_std_threshold: 1.6
+  vwap_mean_reversion_score_bonus: 16.0
+  vwap_mean_reversion_size_multiplier: 1.1
+  vwap_mean_reversion_momentum_penalty_multiplier: 0.35
+  gap_fill_window_end_ct: 630  # 11:30 ET
+  gap_fill_min_abs_gap_pct: 1.5
+  gap_fill_score_bonus: 10.0
+  gap_fill_size_multiplier: 0.95
+  wave2_min_wave1_avg_pnl: -0.5
+  wave3_min_overall_avg_pnl: -0.3
+  wave4_min_overall_avg_pnl: -0.2
+  entry_gap_reject_pct: 7.0
+  strict_plan_authority_enabled: false
+  strict_plan_authority_min_plan_candidates: 1
+  strict_plan_authority_pending_timeout_minutes: 30
+  preopen_execution_contract_required: true
+  max_buy_orders_per_day: 50
+  enforce_buying_power_gate: true
+  buy_order_min_cash_floor: 1000.0
+  buy_order_guard_fail_closed: true
+  same_day_reentry_cooldown_minutes: 60
+  entry_conviction_floor: 60.0
+  core_trading_adaptive_min_score: 30.0
+  core_trading_adaptive_top_n: 12
+  replacement_score_gap: 15.0
+  replacement_weak_score_gap: 10.0
+  replacement_weak_position_score_ceiling: 5.0
+  replacement_min_candidate_score: 45.0
+  replacement_max_attempts_per_position: 10
+  replacement_prefilter_enabled: true
+  replacement_prefilter_intraday_move_pct: 12.0
+  watchlist_prune_tolerance_min_score: 35.0
+  watchlist_prune_orb_tolerance_pct: 1.0
+  watchlist_prune_vwap_tolerance_pct: 1.0
+  conviction_sizing_enabled: true
+  conviction_size_tiers:
+  - min_score: 70.0
+    multiplier: 1.5
+  - min_score: 55.0
+    multiplier: 1.0
+  - min_score: 35.0
+    multiplier: 0.5
+  # --- Daily drawdown circuit breaker ---
+  daily_max_drawdown_pct: 1.5  # Halt new entries once the defensive ladder reaches tier 2
+  daily_drawdown_tiers:
+  - drawdown_pct: 1.0
+    size_multiplier: 0.5
+  - drawdown_pct: 1.5
+    halt_entries: 1.0
+    trail_atr: 1.5
+  - drawdown_pct: 2.0
+    trail_atr: 1.2
+    trim_bottom_quartile: 1.0
+  - drawdown_pct: 3.0
+    force_close_losers: 1.0
+    halt_next_open: 1.0
+  # --- VWAP Universe Scanner (full-universe SMA-100 scan) ---
+  vwap_universe_scan_enabled: true
+  vwap_universe_scan_interval_cycles: 5  # Scan every 5 cycles (~5 min)
+  vwap_universe_max_entries_per_day: 5   # Max 5 VWAP universe entries per day
+  vwap_universe_min_score: 50.0          # Minimum setup quality score
+  vwap_universe_min_risk_reward: 1.5     # Minimum risk/reward ratio
+  vwap_universe_sma_period: 120          # Stocks must be above SMA-120
+  vwap_universe_min_price: 2.0           # Min stock price
+  vwap_universe_max_price: 400.0         # Max stock price
+  vwap_universe_min_avg_volume: 500000   # Min avg daily volume
+  vwap_universe_min_atr_pct: 1.0         # Min ATR as % of price
+  vwap_universe_max_scan_tickers: 100    # Max tickers to fetch bars for per scan
+  # --- Intraday Reserve Scan (SMA-filtered, PM-style analysis) ---
+  intraday_reserve_scan_enabled: true
+  intraday_reserve_scan_delay_minutes: 60
+  intraday_reserve_min_score: 55.0
+  intraday_reserve_size_multiplier: 1.15
+  intraday_reserve_stocktwits_score_weight: 0.05
+  intraday_reserve_signal_validation_enabled: true
+  intraday_reserve_fallback_enabled: true
+  intraday_reserve_recent_days: 10
+  intraday_reserve_seed_cap: 60
+  strength_reentry_enabled: true
+  strength_reentry_active_regimes:
+  - CHOP
+  - SELLOFF
+  - SELL_OFF
+  - CRISIS
+  - RISK_OFF
+  - BEARISH
+  - DISTRIBUTION
+  - LEAN_BEARISH
+  strength_reentry_scan_interval_cycles: 3
+  strength_reentry_first_hour_minutes: 60
+  strength_reentry_min_open_to_hour_gain_pct: 1.0
+  strength_reentry_min_relative_strength_pct: 1.25
+  strength_reentry_held_min_open_to_hour_gain_pct: -1.0
+  strength_reentry_held_min_current_relative_strength_pct: 2.0
+  strength_reentry_held_min_day_return_pct: 0.25
+  strength_reentry_held_near_reclaim_tolerance_pct: 0.2
+  strength_reentry_follow_through_minutes: 3
+  strength_reentry_follow_through_hold_above_reclaim_pct: 0.0
+  strength_reentry_learning_block_override_enabled: true
+  strength_reentry_max_pullback_pct: 3.25
+  strength_reentry_min_reclaim_volume_ratio: 1.15
+  claw_long_exception_require_above_vwap: true
+  claw_long_exception_min_volume_ratio: 1.15
+  claw_long_exception_min_relative_strength_pct: 1.25
+  strength_reentry_new_entry_size_multiplier: 0.55
+  strength_reentry_add_size_multiplier: 0.5
+  strength_reentry_max_new_entries_per_day: 3
+  strength_reentry_max_adds_per_day: 3
+  bearish_session_min_deployed_pct: 0.5
+  bearish_session_floor_counts_inverse_exposure: true
+  no_fill_watchdog_cycles: 2
+  no_fill_escalation_cycles: 4
+  no_fill_recheck_top_n: 5
+  no_fill_override_top_n: 3
+  no_fill_override_max_entries: 2
+  replacement_min_hold_minutes: 120
+research_freshness:
+  enabled: true
+  weekday_max_age_hours: 18.0
+  monday_max_age_hours: 60.0
+  premarket_max_age_hours: 18.0
+  premarket_previous_day_cutoff_hour_et: 18.5
+  premarket_previous_day_cutoff_override: true
+  strict_weekday_max_age_hours: 14.0
+  strict_weekday_start_hour_et: 9.5
+  warning_age_hours: 24.0
+  sunday_refresh_hour_et: 18
+  sunday_refresh_min_age_hours: 48.0
+  stale_penalty_age_hours: 24.0
+  stale_score_threshold_penalty: 5.0
+  stale_position_size_multiplier: 0.85
+  premarket_block_if_stale: true
+premarket_gap_policy:
+  enabled: true
+  extreme_gap_up_pct: 10.0
+  extreme_gap_down_pct: -5.0
+  moderate_gap_up_pct: 3.0
+  moderate_gap_down_pct: -2.0
+  reprice_up_multiplier: 0.99
+  reprice_down_multiplier: 1.01
+premarket_scalp:
+  # Premarket scalp lane: opportunistic plays on extreme-gap-up names.
+  # Hard rules: never held into the regular session — every position
+  # liquidated before 09:30 ET. Paper-account only by intent; user can
+  # reset paper if anything goes sideways.
+  #
+  # DISABLED 2026-05-07: initial implementation churned 5 gap-ups for
+  # small losses each (AAON, DDOG, WRBY, XMTR, PTON) because:
+  #   - it bought as late as T-35 from open, leaving too little runway
+  #   - had no per-position P&L stop or trailing during the hold
+  #   - exited at premarket bids that are wide-spread and discount-priced
+  #
+  # day-manager 2026-05-19 (H1) REDESIGN — landed but kept disabled until
+  # the user clears the paper-validation bar (5 sessions with PF >= 1.2):
+  #   - Entry window narrowed to T-90 .. T-45 (no entries after T-45).
+  #   - Combined momentum gate (3 consec up bars + 1.5x volume +
+  #     last > premarket VWAP + within 1.5% of VWAP) gates each candidate.
+  #   - Dynamic exits per position: hard stop -1.0%, trailing stop 1.0%
+  #     armed once peak >= +1.5%, max-hold 25 min. Timer ladder remains
+  #     as the final safety net.
+  #   - Daily circuit breaker: 3 consec losses OR cum P&L <= -$200
+  #     disables the lane for the rest of the session.
+  #   - Telemetry written to logs/premarket_scalp_telemetry_<date>.jsonl.
+  # day-manager 2026-05-20: user enabled scalp lane for tomorrow. paper_only
+  # stays true by intent; circuit-breaker armed (3 consec losses or -$200 cum).
+  enabled: true
+  paper_only: true
+  # Max concurrent open scalp positions at any time.
+  max_concurrent_positions: 5
+  # Max total scalp buy attempts per day. Sets the daily observation
+  # window: at most 10 round-trips per session.
+  max_orders_per_day: 10
+  size_usd: 1500.0
+  min_gap_pct: 5.0
+  min_volume_ratio: 3.0
+  min_liquidity_score: 70
+  # New entry window (H1 redesign). min_entry_minutes_before_open kept for
+  # backwards-compat; the new keys take precedence.
+  min_entry_minutes_before_open: 60
+  entry_window_start_minutes_before_open: 90
+  entry_window_end_minutes_before_open: 45
+  # Combined momentum gate.
+  momentum_min_consec_up_bars: 3
+  momentum_min_volume_ratio: 1.5
+  momentum_max_vwap_distance_pct: 1.5
+  # Per-position dynamic exits.
+  hard_stop_pct: 1.0
+  trailing_stop_pct: 1.0
+  trailing_arm_at_pct: 1.5
+  max_hold_minutes: 25
+  # Daily circuit breaker.
+  circuit_breaker_consecutive_losses: 3
+  circuit_breaker_daily_loss_dollars: -200.0
+  telemetry_path: logs/premarket_scalp_telemetry.jsonl
+  max_spread_pct: 1.0
+  profit_take_pct: 5.0
+  require_sector_alignment: true
+  # 3-tier escalating exit before regular open (09:30 ET):
+  #   force      = first attempt with a fair-price limit at the bid.
+  #   aggressive = "market sell" equivalent — limit at bid * 0.95.
+  #                Alpaca rejects literal market orders in extended
+  #                hours, so this is how we sweep the book at T-10.
+  #   emergency  = $0.01 limit. Pay whatever to be flat by 09:30.
+  force_exit_minutes_before_open: 15
+  aggressive_exit_minutes_before_open: 10
+  emergency_exit_minutes_before_open: 1
+overnight_cut_policy:
+  # H1 D3 (2026-05-22): backtested weak-only T-15 overnight-risk trim.
+  # Broad hard cuts lost money in the backtest; live policy only trims
+  # positions whose entry+30m P&L was <= -1.0%. DecisionClaw is shadow-only
+  # here and cannot veto/force orders.
+  enabled: true
+  recovery_boost: 5.0
+  trigger_minutes_before_close: 15
+  latest_minutes_before_close: 2
+  weak_entry_plus_minutes: 30
+  weak_entry_plus_threshold_pct: -1.0
+  trim_fraction: 0.50
+  min_hold_conviction_score: 90.0
+  min_remaining_position_value: 100.0
+  decision_claw_override_mode: shadow_only
+premarket_manager:
+  enabled: true
+  max_watchlist_symbols: 400
+  use_news: true
+  use_stocktwits: true
+  report_basename: morning_intelligence
+  weight_gap: 1.0
+  weight_volume: 1.0
+  weight_news: 1.0
+  weight_stocktwits: 0.75
+  weight_vwap: 1.0
+  weight_sr: 0.8
+momentum_scanner:
+  enabled: true
+  artifact_path: data/momentum_watchlist_live.json
+  start_time_ct: "06:00"
+  premarket_interval_seconds: 90
+  intraday_interval_seconds: 180
+  sleep_outside_window_seconds: 300
+  max_candidates: 100
+  max_live_scan_symbols: 1500
+  max_news_candidates: 25
+  reserved_slot_cap: 10
+  dynamic_reserved_slots_enabled: true
+  max_reserved_slot_cap: 15
+  empty_artifact_fallback_minutes: 15
+  min_price: 2.0
+  max_price: 400.0
+  min_avg_volume: 200000
+  # Permissive floor: scanner surfaces 60+ to give downstream entry-quality
+  # gates a chance to refine into the 60-75 sweet spot.
+  min_score: 60.0
+  min_premarket_gain_pct: 2.5
+  # Lowered from 4.0 so the scanner catches *early* momentum (stocks
+  # starting a move) instead of only already-extended names that tend to
+  # fade after entry.
+  min_intraday_gain_pct: 2.5
+  min_short_momentum_pct: 0.5
+  min_rel_volume: 1.75
+  min_trend_strength: 0.6
+  min_premarket_volume: 100000
+  fade_reject_pct: 2.5
+  extreme_gap_pct: 12.0
+  require_catalyst_for_extreme_gap_names: true
+  stale_after_seconds: 420
+  scan_minutes_back_premarket: 390
+  scan_minutes_back_intraday: 390
+  alpaca_batch_size: 25
+  alpaca_pause_seconds: 1.0
+universe_scanner:
+  high_risk_atr: 8.0
+  max_candidates: 200
+  max_data_age_days: 5  # Bumped from 3 to handle holiday weekends (3-day weekends = 5 calendar days)
+  max_market_cap: 10000000000.0
+  max_price: 400.0
+  min_atr_percent: 3.0
+  min_avg_volume: 200000
+  min_gap_percent: 3.0
+  min_market_cap: 2000000000.0
+  post_spike_volume_threshold: 5.0
+  post_spike_range_atr_threshold: 1.5
+  min_price: 2.0
+  min_volume_ratio: 1.5
+  min_weekly_return: 1
+  preferred_atr_range:
+  - 2.5
+  - 6.0
+  rsi_max: 75
+  rsi_min: 40.0
+  scan_types:
+  - momentum_breakout
+  - mean_reversion
+  - earnings_momentum
+  score_weights:
+    momentum: 0.3
+    pullback: 0.1
+    trend: 0.15
+    volatility: 0.2
+    volume: 0.25
+signal_generation:
+  enabled: true
+  baseline_signal_a_name: SignalA_v0
+  baseline_signal_b_name: SignalB_v0
+  day_manager_pipeline_enabled: true
+  day_manager_alpha_blend_weight: 0.3
+  day_manager_enrichment_cache_enabled: true
+  alpha_generation_max_workers: 4
+  llm_overlay:
+    enabled: false
+    mode: reject_veto_only
+    single_model: qwen3.5:9b-q4_K_M
+    promote_model: qwen3:14b-q4_K_M
+    reject_model: phi4:14b-q4_K_M
+    top_slice_size: 30
+    timeout_seconds: 10
+    min_confidence_to_override: 70.0
+    min_benchmark_improvement_margin: 3.0
+    benchmark_report_path: reports/llm_signal_layer_benchmark_latest.json
+  enable_regime_router: true
+  regime_router_default: neutral
+  combine_method: weighted_sum
+  min_composite_score: 35.0
+  max_signals_per_batch: 200
+  determinism_seed: 42
+  fail_fast_on_schema_violation: true
+  signal_zoo_min_count: 10
+  signal_zoo_target_count: 20
+  families_enabled:
+    - ts_momentum
+    - xs_momentum
+    - mean_reversion
+    - breakout
+    - pullback
+    - pairs
+  ts_momentum:
+    lookback_long_bars: 252
+    lookback_short_bars: 126
+    exclude_recent_bars: 21
+  breakout:
+    donchian_window: 20
+    squeeze_percentile_window: 120
+  mean_reversion:
+    rsi_window: 2
+    rsi_entry_threshold: 10
+  pairs:
+    zscore_entry_threshold: 2.0
+  ensemble:
+    enable_ev_calibration: true
+    calibration_lookback_bars: 252
+    output_range: [-1.0, 1.0]
+  regime:
+    rule_labels:
+      - trend
+      - chop
+      - crisis
+    probabilistic_model: hmm_optional
+    family_enable_policy:
+      ts_momentum: [trend]
+      xs_momentum: [trend]
+      mean_reversion: [chop, crisis]
+      breakout: [trend]
+      pullback: [trend]
+      pairs: [chop]
+      baseline_a: [trend, chop, crisis, neutral]
+      baseline_b: [trend, chop, crisis, neutral]
+      inverse_etf: [crisis]
+  inverse_etf_hedging:
+    enabled: true
+    max_portfolio_allocation_pct: 15.0
+    allowed_regimes: [crisis, risk_off]
+    max_hold_days: 3
+    symbols:
+      - SH   # 1x Inverse S&P 500
+      - PSQ  # 1x Inverse Nasdaq 100
+      - RWM  # 1x Inverse Russell 2000
+      - DOG  # 1x Inverse Dow 30
+      - SDS  # 2x Inverse S&P 500 (use with caution)
+
+# CLAW Remote - Mobile Chat Interface
+claw_remote:
+  enabled: true
+  port: 8778
+  command_dir: "data/claw_commands"
+  poll_interval_sec: 2
+  command_timeout_sec: 30
+  max_history: 200
+  gemini_model_fast: "gemini-2.5-flash-lite"
+  gemini_model_code: "gemini-2.5-pro"
+  allowed_code_paths: ["autotrade/", "config/", "tools/"]
+
+# WorkflowClaw - LLM-powered autonomous workflow manager
+workflow_claw:
+  enabled: true
+  journal_path: "logs/workflow_claw_journal.jsonl"
+  state_path: "data/workflow_claw_state.json"
+  briefing_dir: "logs/morning_briefings"
+  primary_model: "phi4:14b-q4_K_M"
+  fallback_model: "qwen2.5-coder:14b"
+  openrouter_model: "anthropic/claude-3.5-sonnet"
+  openai_model: "gpt-4.1-mini"
+  max_agent_turns: 15
+  num_ctx: 32768
+  temperature: 0.2
+  supervisor_poll_interval_sec: 10
+  output_stale_timeout_sec: 3600
+  artifact_check_interval_sec: 300
+  max_recovery_attempts_per_hour: 10
+  max_total_recovery_attempts: 50
+  services:
+    ollama:
+      health_url: "http://localhost:11434/api/tags"
+      restart_command: ["ollama", "serve"]
+      kill_command: ["taskkill", "/F", "/IM", "ollama.exe"]
+      restart_cooldown_sec: 30
+      max_restart_attempts: 5
+      health_timeout_sec: 10
+      critical: true
+    searxng:
+      health_url: "http://localhost:8080/healthz"
+      restart_command: ["docker", "start", "searxng"]
+      restart_cooldown_sec: 60
+      max_restart_attempts: 3
+      health_timeout_sec: 10
+      critical: false
+
+decision_claw:
+  enabled: true
+  authority_mode: "full"
+  prompt_profile_path: "config/decision_claw_prompt_profiles.json"
+  state_path: "data/decision_claw_state.json"
+  decisions_log_path: "logs/decision_claw_decisions_{date}.jsonl"
+  actions_log_path: "logs/decision_claw_actions_{date}.jsonl"
+  cost_log_path: "logs/decision_claw_cost_{date}.jsonl"
+  phase_snapshot_path: "plans/decision_claw_phase_snapshot_{date}.json"
+  final_watchlist_path: "plans/decision_claw_final_watchlist_{date}.json"
+  legacy_advisory_enabled: true
+  openai_primary: false
+  idle_capital_threshold_pct: 50.0
+  redeployment_interval_minutes: 60
+  redeployment_min_no_fill_streak: 2
+  redeployment_candidate_limit: 3
+  redeployment_entry_cap: 2
+  top_n_floor: 3
+  post_market:
+    enabled: true
+    provider: "local"
+    model: "qwen3:14b-q4_K_M"
+    fallback_provider: "local"
+    fallback_model: "phi4:14b-q4_K_M"
+    max_symbols: 10
+    max_output_tokens: 500
+    cooldown_seconds: 3600
+    scheduled_interval_minutes: 1440
+    paid_enabled: true
+  overnight:
+    enabled: true
+    provider: "openai"
+    model: "gpt-5-mini"
+    reasoning_effort: "low"
+    fallback_provider: "local"
+    fallback_model: "qwen3:14b-q4_K_M"
+    max_symbols: 48
+    max_output_tokens: 6000
+    cooldown_seconds: 1800
+    scheduled_interval_minutes: 360
+    paid_enabled: true
+  premarket:
+    enabled: true
+    provider: "local"
+    model: "qwen3:14b-q4_K_M"
+    fallback_provider: "local"
+    fallback_model: "phi4:14b-q4_K_M"
+    max_symbols: 20
+    max_output_tokens: 900
+    cooldown_seconds: 900
+    scheduled_interval_minutes: 30
+    paid_enabled: true
+  market_open:
+    enabled: true
+    provider: "openai"
+    model: "gpt-5-mini"
+    reasoning_effort: "low"
+    fallback_provider: "local"
+    fallback_model: "qwen3:14b-q4_K_M"
+    max_symbols: 10
+    max_output_tokens: 4400
+    cooldown_seconds: 600
+    scheduled_interval_minutes: 15
+    paid_enabled: true
+  market_state:
+    enabled: false   # See prompts/dev/2026-05-22_market_state_llm_disable_and_shadow.md.
+    provider: "openai"
+    model: "gpt-5-mini"
+    reasoning_effort: "low"
+    fallback_provider: "local"
+    fallback_model: "qwen3:14b-q4_K_M"
+    max_symbols: 10
+    max_output_tokens: 1800
+    cooldown_seconds: 900
+    scheduled_interval_minutes: 30
+    paid_enabled: true
+  wave_checkpoint:
+    enabled: true
+    provider: "openai"
+    model: "gpt-5-mini"
+    reasoning_effort: "low"
+    fallback_provider: "local"
+    fallback_model: "qwen3:14b-q4_K_M"
+    max_symbols: 8
+    max_output_tokens: 4400
+    cooldown_seconds: 600
+    scheduled_interval_minutes: 15
+    paid_enabled: true
+  symbol_validation:
+    enabled: true
+    provider: "local"
+    model: "qwen3:14b-q4_K_M"
+    fallback_provider: "openai"
+    fallback_model: "gpt-5"
+    max_symbols: 1
+    max_output_tokens: 500
+    cooldown_seconds: 0
+    scheduled_interval_minutes: 1
+    paid_enabled: true
+  budget_controls:
+    # day-manager 2026-05-21: bumped 24->1000. Cap was sized for GPT-5-only era;
+    # v0.28+ routes most calls to free local Ollama, so the cost cap below is
+    # the real safety net. 24 was exhausted by 09:49 CDT blocking ASAN/ARX
+    # profit-take trims (see prompts/dev/2026-05-21_session_observations.md §9).
+    daily_max_calls: 1000
+    daily_max_cost_usd: 10.0
+    packet_cache_ttl_seconds: 900
+
+search:
+  primary_host: "http://localhost:8080"
+  backup_hosts:
+    - "https://searx.be"
+    - "https://searx.fyi"
+    - "https://searx.work"
+  timeout: 10
+  max_retries_per_host: 1

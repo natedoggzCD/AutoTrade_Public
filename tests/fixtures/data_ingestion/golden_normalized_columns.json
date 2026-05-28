@@ -1,0 +1,11 @@
+{
+  "normalized_columns": [
+    "date",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume",
+    "symbol"
+  ]
+}

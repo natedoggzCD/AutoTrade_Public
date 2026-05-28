@@ -1,0 +1,208 @@
+# YouTube Channels Configuration for AutoTrade Daily Scanner
+# ==========================================================
+# These channels are scanned daily for market intelligence.
+# Each channel has a producer-specific extraction template.
+
+channels:
+  click_capital:
+    name: "Click Capital"
+    channel_id: "UCpBPTKot6Im9SWs1upQMZKA"
+    channel_url: "https://www.youtube.com/@Click-Capital"
+    host: "Jarrod"
+    template: "prompts/llm/youtube_click_capital.md"
+    priority: 5  # Demoted until recent coverage is consistently restored
+    typical_length_min: 15
+    value: "Macro sentiment, Fear & Greed, sector rotation, contrarian plays"
+    schedule:
+      # Daily market review - usually posted evening AEST (morning US)
+      check_times_et: ["06:00", "14:00"]
+      max_age_hours: 36  # Don't process videos older than this
+
+  rta_trading:
+    name: "Arete Trading"
+    channel_id: "UCTeFsS-bP0XEt3NBMjfW2cA"
+    channel_url: "https://www.youtube.com/@AreteTrading"
+    host: "Host"
+    template: "prompts/llm/youtube_rta_trading.md"
+    priority: 2
+    typical_length_min: 30
+    value: "VIX structure, risk regime, market direction overlay, sector spillover"
+    schedule:
+      # Daily + Saturday deep dives
+      check_times_et: ["06:00", "14:00", "20:00"]
+      max_age_hours: 36
+
+  mike_market:
+    name: "Mike Jones Investing"
+    channel_id: "UCNeBCizpA1NbX7A9_ia6jYg"
+    channel_url: "https://www.youtube.com/@themikejonesinvesting"
+    host: "Mike"
+    template: "prompts/llm/youtube_mike_market.md"
+    priority: 2
+    typical_length_min: 20
+    value: "Market breadth (% above MAs), gamma regime, bond crash indicator"
+    schedule:
+      check_times_et: ["06:00", "14:00"]
+      max_age_hours: 36
+
+  finfluential_tv:
+    name: "FinFluential Television"
+    channel_id: "UC7QHSNOKZvbqpXWFv0SiYDQ"
+    channel_url: "https://www.youtube.com/@FinFluentialTV"
+    host: "FinFluential"
+    template: "prompts/llm/youtube_finfluential_tv.md"
+    priority: 3
+    typical_length_min: 18
+    value: "Macro, S&P 500/Nasdaq/Russell 2000 context, treasury bonds, Bitcoin risk appetite"
+    schedule:
+      check_times_et: ["06:00", "14:00", "20:00"]
+      max_age_hours: 36
+
+  stockedup:
+    name: "StockedUp"
+    channel_id: "UC-m6zNItyoDk5lSykDlhE4Q"
+    channel_url: "https://www.youtube.com/@StockedUp"
+    host: "Mike D'Antonio"
+    template: "prompts/llm/youtube_stocked_up.md"
+    priority: 4
+    typical_length_min: 20
+    value: "Daily live stock/options watchlist, ticker setups, support/resistance, intraday sentiment"
+    schedule:
+      check_times_et: ["06:00", "09:30", "14:00", "20:00"]
+      max_age_hours: 36
+
+  trade_brigade:
+    name: "Trade Brigade"
+    channel_id: "UCYKtr6GfycBqQJf32tbQSbQ"
+    channel_url: "https://www.youtube.com/@TradeBrigade"
+    host: "Matt"
+    template: "prompts/llm/youtube_trade_brigade.md"
+    priority: 1  # Highest - covers IWM/small-caps directly
+    typical_length_min: 45
+    value: "Market profile, IWM/Russell small-cap, SPY/QQQ levels, trade ideas"
+    schedule:
+      # Midweek, Saturday, pre-market prep, live close
+      check_times_et: ["06:00", "10:00", "16:30", "20:00"]
+      max_age_hours: 48  # Longer - Saturday vids valid into Monday
+
+# Scanner settings
+scanner:
+  output_dir: "data/youtube"
+  reports_dir: "data/youtube/reports"
+  rag_dir: "data/youtube/rag"
+  
+  # Transcription settings (uses mlgpu environment)
+  transcription:
+    python_path: "python"
+    model: "large-v3"
+    device: "cuda"
+    dtype: "float16"
+    beam_size: 1  # Fast mode for daily scanning
+    best_of: 1
+    condition_on_previous_text: false
+    vad_filter: true
+    artifact_mode: "scanner"  # scanner=txt/json only, full=txt/json/srt/vtt/chunks
+    ffmpeg_location: "/home/nate/miniconda3/envs/tflinux/bin"
+    env_vars:
+      KMP_DUPLICATE_LIB_OK: "TRUE"
+    wsl:
+      enabled: true
+      distro: "Ubuntu-24.04"
+      python: "/home/nate/miniconda3/envs/tflinux/bin/python"
+
+  # Performance tuning
+  performance:
+    max_channel_workers: 6
+    max_extraction_workers: 2
+    transcription_worker_count: 1  # Keep GPU transcription single-worker by default
+  
+  # LLM extraction settings
+  # Daily scanner now runs in OpenAI-first mode for speed and large context.
+  # Local Ollama fallback is intentionally disabled for now because it is too
+  # slow for overnight YouTube refresh.
+  extraction:
+    extraction_provider: "openai"                    # openai | openrouter | ollama | gemini
+    model: "gpt-4.1-mini"                           # Stable extraction model
+    synthesis_model: "gpt-4.1"                      # Stable cross-channel synthesis
+    report_model: "gpt-4.1"                         # Stable daily report model
+    synthesis_provider: "openai"                    # openai | openrouter | ollama | gemini
+    openrouter_url: "https://openrouter.ai/api/v1/chat/completions"
+    openrouter_api_key_env: "OPENROUTER_API_KEY"
+    openrouter_referer: "https://localhost/autotrade"
+    openrouter_title: "AutoTrade YouTube Summary"
+    openrouter_max_tokens: 8192
+    openai_default_input_tokens: 120000
+    openai_model_input_tokens:
+      gpt-4.1: 120000
+      gpt-4.1-mini: 120000
+    synthesis_max_output_tokens: 8192  # Synthesis needs more room than per-video extraction
+    openrouter_default_input_tokens: 32768
+    openrouter_model_input_tokens:
+      openai/gpt-oss-120b:free: 32768
+      stepfun/step-3.5-flash:free: 32768
+      z-ai/glm-4.5-air:free: 32768
+    synthesis_chunking_enabled: true
+    synthesis_chunk_threshold_ratio: 0.80
+    synthesis_chunk_target_tokens: 12000
+    synthesis_dynamic_max_chars_per_channel: 18000
+    synthesis_max_prior_chars: 8000
+    synthesis_input_safety_margin_tokens: 1024
+    report_fallback_model: ""
+    fallback_model: ""
+    local_fallback_model: ""
+    openai_fallback_enabled: false
+    openai_fallback_model: "gpt-4.1"
+    openai_fallback_extraction_model: "gpt-4.1"
+    openai_fallback_max_tokens: 8192
+    ollama_url: "http://localhost:11434"            # Retained for optional future re-enable
+    timeout: 800  # per extraction
+    synthesis_timeout: 1200  # 20 min for cross-channel synthesis with large context
+    num_ctx: 32768  # 32K for per-video extraction (Ollama only)
+    synthesis_num_ctx: 65536  # 64K for synthesis (Ollama only)
+  
+  # Daily report settings
+  report:
+    generate_daily_report: true
+    report_format: "json"  # json | markdown | both
+    include_trade_ideas: true
+    include_regime_levels: true
+    include_agent_actions: true
+  
+  # RAG storage settings
+  rag:
+    store_transcripts: true       # Full text for long-term retrieval
+    store_extractions: true       # Structured JSON for agent consumption
+    store_daily_reports: true     # Aggregated daily intelligence
+    retention_days: 90            # Keep raw transcripts for 90 days
+    retention_extractions_days: 365  # Keep structured data for 1 year
+
+  # Weekend deep-dive scanning (longer videos, smarter model selection)
+  weekend:
+    max_age_hours: 72
+    max_results_per_channel: 5
+    # extraction_model_short: "phi4:14b-q4_K_M"   # Local Ollama (disabled — using OpenRouter)
+    # extraction_model_long: "glm-4.7-flash"       # Local Ollama (disabled — using OpenRouter)
+    extraction_model_short: "stepfun/step-3.5-flash:free"
+    extraction_model_long: "stepfun/step-3.5-flash:free"
+    extraction_model_escalation_threshold: 20000  # chars
+    synthesis_provider: "openrouter"
+    synthesis_model_local_fallback: "stepfun/step-3.5-flash:free"
+    synthesis_max_tokens: 8192
+
+  # Deduplication
+  dedup:
+    track_file: "data/youtube/processed_videos.json"
+    skip_already_processed: true
+
+  # Readiness and watchdog controls used by youtube_readiness.py
+  readiness:
+    require_all_channels: false
+    min_videos_to_skip_scan: 4
+    scan_cooldown_minutes: 30
+    # Scanner runs until completion; only halt if no progress for this long.
+    scan_stall_timeout_seconds: 7200
+    # Optional hard wall-clock limit (0 disables hard timeout).
+    scan_hard_timeout_seconds: 0
+    report_stall_timeout_seconds: 3600
+    report_hard_timeout_seconds: 0
+    progress_poll_seconds: 5

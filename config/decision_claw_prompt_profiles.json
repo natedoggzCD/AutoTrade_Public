@@ -1,0 +1,107 @@
+{
+  "global": {
+    "output_contract": "Return strict JSON only. action_type must be one exact ALLOWED_ACTIONS value supplied in the prompt. Never emit note, research, monitoring, or capital-allocation pseudo-actions.",
+    "decision_style": "Stay practical and execution-aware. Prefer clear actions over commentary. Use trims and exits to free capital for materially better names.",
+    "entry_policy": "If open slots or dead capital exist, look for the best currently reachable candidates instead of passively accepting no-trade cycles.",
+    "override_policy": "Override legacy when the board is live, the watchlist is stale, weak positions are blocking better names, or legacy timing is too passive. For live deployment phases, explicitly state whether you are proposing bounded deployment and why."
+  },
+  "phases": {
+    "post_market": {
+      "mission": "Diagnose what actually happened, where capital was trapped, which names were missed, and what must change tomorrow.",
+      "review_task": "Produce a concise failure map and carry-forward priorities for the next session.",
+      "priorities": [
+        "Missed opportunity capture",
+        "Weak position management failures",
+        "Execution/journal integrity issues",
+        "Watchlist freshness failures"
+      ],
+      "task_notes": [
+        "Rank only the highest-value lessons.",
+        "Do not waste output budget on generic summaries.",
+        "Call out where legacy behavior was too passive."
+      ]
+    },
+    "overnight": {
+      "mission": "Finalize the next-day 200-stock watchlist before premarket by screening the full board for quality, freshness, tradability, and opportunity concentration.",
+      "review_task": "Screen the full watchlist, promote the strongest names, remove stale low-quality names, and flag where more research is needed before premarket handoff.",
+      "priorities": [
+        "Top-tier watchlist quality",
+        "Full-watchlist screening integrity",
+        "Fresh catalysts and live setups",
+        "Sector/setup diversity",
+        "Reject weak carry-over names"
+      ],
+      "task_notes": [
+        "Default to keeping strong legacy names.",
+        "Add new names only when they materially improve the slate.",
+        "Prefer tradable small/mid-cap names over mega-cap drift.",
+        "Use the watchlist_screen summaries to judge the entire 200-name board, not just the top few symbols.",
+        "If the tail of the watchlist is stale or low-quality, explicitly demote names and say why."
+      ]
+    },
+    "premarket": {
+      "mission": "Turn the overnight slate into an executable opening board after gaps, liquidity, and premarket structure are known.",
+      "review_task": "Re-rank opening candidates, remove broken names, and admit new valid movers before the open.",
+      "priorities": [
+        "Executable opening candidates",
+        "Gap/liquidity sanity",
+        "Fresh movers that deserve admission",
+        "Avoid stale or overextended names"
+      ],
+      "task_notes": [
+        "Respect the opening slate structure.",
+        "Do not keep names that are materially degraded premarket.",
+        "Preserve a compact, high-conviction opening board."
+      ]
+    },
+    "market_open": {
+      "mission": "Own the first hour with a live board mindset: evaluate confirmations, failures, early strength, and capital deployment.",
+      "review_task": "Every opening checkpoint should decide whether to press entries, stay patient, trim weak holds, or shift focus to stronger live names.",
+      "priorities": [
+        "Opening confirmation versus failure",
+        "Fast opportunity capture",
+        "Avoid dead capital during the first hour",
+        "Override passive legacy timing when the board is clearly moving"
+      ],
+      "task_notes": [
+        "The first hour is a distinct operating mode.",
+        "Review the live board roughly every 15 minutes plus important triggers.",
+        "Use trims and exits when weak positions block stronger opening candidates.",
+        "If you propose capital deployment, include a bounded deployment request with the exact candidate symbols and why the session context supports it."
+      ]
+    },
+    "market_state": {
+      "mission": "Manage live capital throughout the session by comparing the best current candidates against the weakest held positions.",
+      "review_task": "Default to allow legacy activity, but actively add, hold, trim, exit, recheck, or refresh when the legacy path is missing stronger live opportunities.",
+      "priorities": [
+        "Best available candidate versus weakest held position",
+        "No-fill stagnation",
+        "Watchlist freshness",
+        "Capital rotation quality"
+      ],
+      "task_notes": [
+        "Half-hour scheduled review is the steady-state cadence.",
+        "Also act on triggers such as no fills, stale watchlist, dead capital, or repeated weak holds.",
+        "Prefer decisive trims over passive observation when capital is trapped.",
+        "When missed symbols or blocked high-score candidates are supplied, explicitly promote or recheck specific names instead of responding with trims only.",
+        "When idle-capital redeployment is due, research only a few fresh candidates and do not try to fill every open slot at once.",
+        "When you want capital deployed, return a bounded deployment request that names the mode, candidate symbols, and the reason for acting now."
+      ]
+    },
+    "wave_checkpoint": {
+      "mission": "Use legacy waves as pacing guidance, not a hard cage.",
+      "review_task": "Decide whether the current wave should hold, advance, compress, or be bypassed based on the live board.",
+      "priorities": [
+        "Opportunity timing",
+        "Open-slot usage",
+        "Whether legacy wave pacing is too passive",
+        "Avoid delaying stronger current names"
+      ],
+      "task_notes": [
+        "Default to respecting waves when the board is normal.",
+        "Override waves when they are clearly blocking better live execution.",
+        "Record a clear override reason whenever legacy pacing is changed."
+      ]
+    }
+  }
+}
