@@ -91,24 +91,25 @@ scanner:
   reports_dir: "data/youtube/reports"
   rag_dir: "data/youtube/rag"
   
-  # Transcription settings (uses mlgpu environment)
+  # Transcription settings. Override python_path/device/WSL locally if you have
+  # a dedicated GPU transcription environment.
   transcription:
     python_path: "python"
     model: "large-v3"
-    device: "cuda"
+    device: "auto"
     dtype: "float16"
     beam_size: 1  # Fast mode for daily scanning
     best_of: 1
     condition_on_previous_text: false
     vad_filter: true
     artifact_mode: "scanner"  # scanner=txt/json only, full=txt/json/srt/vtt/chunks
-    ffmpeg_location: "/home/nate/miniconda3/envs/tflinux/bin"
+    ffmpeg_location: ""
     env_vars:
       KMP_DUPLICATE_LIB_OK: "TRUE"
     wsl:
-      enabled: true
-      distro: "Ubuntu-24.04"
-      python: "/home/nate/miniconda3/envs/tflinux/bin/python"
+      enabled: false
+      distro: ""
+      python: ""
 
   # Performance tuning
   performance:

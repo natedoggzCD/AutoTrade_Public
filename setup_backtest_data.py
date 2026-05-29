@@ -134,6 +134,16 @@ def parse_args() -> argparse.Namespace:
         help="Optional subset of dataset filenames to upload/download.",
     )
     parser.add_argument(
+        "--list",
+        action="store_true",
+        help="List the managed dataset files, expected sizes, and upload sources.",
+    )
+    parser.add_argument(
+        "--check-sources",
+        action="store_true",
+        help="Check local upload source files without uploading or downloading.",
+    )
+    parser.add_argument(
         "--force",
         action="store_true",
         help="Re-download files even when they already exist locally.",
@@ -165,6 +175,60 @@ def _find_source_path(args: argparse.Namespace, entry: dict) -> Path | None:
         if candidate.exists():
             return candidate
     return None
+
+
+def _format_size(path: Path) -> str:
+    size_mb = path.stat().st_size / 1_048_576
+    if size_mb >= 1024:
+        return f"{size_mb / 1024:.2f} GB"
+    return f"{size_mb:.1f} MB"
+
+
+def _print_file_inventory(args: argparse.Namespace) -> None:
+    print(f"Hugging Face dataset: {args.repo_id}")
+    print(f"Local data directory: {Path(args.data_dir)}")
+    print(f"TradingMethods source: {Path(args.tradingmethods_dir)}")
+    print(f"DownDay source: {Path(args.downday_dir)}")
+    print()
+
+    for entry in _selected_entries(args):
+        print(f"- {entry['hf_filename']} ({entry['size_hint']})")
+        print(f"  {entry['description']}")
+        for candidate in _resolve_source_candidates(args, entry):
+            if candidate.exists():
+                print(f"  source: {candidate} [{_format_size(candidate)}]")
+                break
+        else:
+            print("  source: not found locally")
+        print()
+
+
+def _check_sources(args: argparse.Namespace) -> bool:
+    missing = []
+    print("Checking upload source files...")
+    print()
+    for entry in _selected_entries(args):
+        source = _find_source_path(args, entry)
+        if source is None:
+            status = "MISSING" if entry["required"] else "missing optional"
+            print(f"  [{status}] {entry['hf_filename']}")
+            for candidate in _resolve_source_candidates(args, entry):
+                print(f"           looked for: {candidate}")
+            if entry["required"]:
+                missing.append(entry["hf_filename"])
+            continue
+
+        print(f"  [ok] {entry['hf_filename']} <- {source} ({_format_size(source)})")
+
+    print()
+    if missing:
+        print("Required source files are missing:")
+        for filename in missing:
+            print(f"  - {filename}")
+        return False
+
+    print("All selected source files are available for upload/sync.")
+    return True
 
 
 def _load_huggingface_tools():
@@ -275,7 +339,18 @@ def main() -> None:
     args = parse_args()
     token = os.environ.get("HF_TOKEN")
 
+    if args.list:
+        _print_file_inventory(args)
+        return
+
+    if args.check_sources:
+        if not _check_sources(args):
+            sys.exit(1)
+        return
+
     if args.upload or args.sync:
+        if not _check_sources(args):
+            sys.exit(1)
         _upload_files(args, token)
 
     if not args.upload or args.sync:
