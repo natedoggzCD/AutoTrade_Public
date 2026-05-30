@@ -60,6 +60,25 @@ python setup_backtest_data.py --list
 python -m pytest tests/test_data_ingestion_module.py::TestIngestionPaths -q
 ```
 
+## Docker Testing
+
+Use Docker when you want an isolated test environment that does not modify your
+local Python, conda, CUDA, or package installation:
+
+```powershell
+docker compose build autotrade-test
+docker compose run --rm autotrade-test
+```
+
+The default container command runs a narrow ingestion-path smoke test. For an
+interactive shell:
+
+```powershell
+docker compose run --rm --profile shell autotrade-shell
+```
+
+See `DOCKER.md` for data mounts, Hugging Face downloads, and credential handling.
+
 ## Backtest Data
 
 Large market-data files are intentionally ignored by Git and downloaded into
@@ -282,4 +301,3 @@ python setup_backtest_data.py
 
 After that, users can run tests, backtests, and YouTube diagnostics locally.
 Brokerage execution and paid model providers remain opt-in.
-

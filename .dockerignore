@@ -1,0 +1,72 @@
+# Git and local editor state
+.git/
+.github/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Secrets and local auth
+.env
+.env.*
+!.env.example
+config/youtube_cookies.txt
+.mcp.json
+.claude/
+.gemini/
+
+# Python/build/cache artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+build/
+dist/
+.venv/
+venv/
+env/
+
+# Runtime outputs
+logs/
+reports/
+plans/*.json
+plans/*.md
+tmp/
+*.log
+pytest_*_out.txt
+replay_*_out.txt
+
+# Large downloaded/generated data
+data/youtube/
+data/backtest_results/
+data/backtest_cache.db
+data/strategy_lab/
+data/strategies/
+data/dry_run/
+data/day_manager_signal_cache/
+data/downday/**
+!data/downday/
+!data/downday/README.md
+!data/downday/market_data.duckdb
+data/downday/*.h5
+data/downday/*.csv
+data/downday/*.parquet
+data/*.duckdb
+*.h5
+*.parquet
+*.pkl
+*.pickle
+
+# Local screenshots and misc artifacts
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.skill
+nul
